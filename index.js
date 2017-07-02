@@ -12,7 +12,7 @@ function main(params) {
 	const password = params.password;
   const dbUsername = params.dbUsername;
   const dbPassword = params.dbPassword;
-
+  const weatherHost = params.weatherHost;
 
   const cloudant = Cloudant({account:dbUsername, password:dbPassword, plugin: 'promises'});
 
@@ -25,27 +25,35 @@ function main(params) {
   const forecastDB = new ForecastDB(db);
 
 
-	const url = `https://twcservice.mybluemix.net/api/weather/v1/geocode/${lat}/${lon}/forecast/daily/10day.json`;
 	const qs = {language: 'en-US', units:  'm'};
 
 
 	 return co(function* () {
-     
-      let result = yield forecastDB.get(lat, lon);
+      let weatherService = new WeatherService(weatherHost, username, password);
+      let location = yield weatherService.location(`/api/weather/v3/location/point?geocode=${lat}%2C${lon}&language=en-US`);
+      let result = yield forecastDB.get(location.location.city);
+
       if (result == null){
-        let data = yield new WeatherService().doRequest(url, username, password, qs);
-        result = yield forecastDB.insert(lat, lon, data);
+
+        let data = yield weatherService.forecast(`/api/weather/v1/geocode/${lat}/${lon}/forecast/daily/10day.json`, qs);
+        result = yield forecastDB.insert(location.location.city, data);
+
       }else if ( (result.updated + (60 * 60 * 1000) ) < new Date().getTime() ){
-        console.log('update ' + result._id);
-        let data = yield new WeatherService().doRequest(url, username, password, qs);
+
+        let data = yield weatherService.forecast(`/api/weather/v1/geocode/${lat}/${lon}/forecast/daily/10day.json`, qs);
         result = yield forecastDB.update(result._id, result._rev, data);
+
       }
 
-      return Promise.resolve({
+      return {
+        location: ((result.id) ? result.id : result._id),
         updated: result.updated,
         body: result.data
-      });
-   });
+      }
+   }).then(
+     (result) => { return Promise.resolve(result); },
+     (err) => { return Promise.reject(err); }
+   );
 
 }
 

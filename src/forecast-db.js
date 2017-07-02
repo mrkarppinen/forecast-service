@@ -6,10 +6,10 @@ class ForecastDB {
   }
 
 
-  get(lat, lon){
+  get(location){
 
       return new Promise( (resolve, reject) => {
-          this.db.get(`${lat}_${lon}`)
+          this.db.get(location)
           .then( (body) => { resolve(body); } )
           .catch( (error) => {
 
@@ -25,10 +25,10 @@ class ForecastDB {
   }
 
 
-  insert(lat, lon, data){
+  insert(location, data){
       return new Promise( (resolve, reject) => {
         const updated = new Date().getTime();
-        this.db.insert({updated:updated, data: data}, `${lat}_${lon}`).then(
+        this.db.insert({updated:updated, data: data}, location).then(
           (doc) => { 
             doc.updated = updated;
             doc.data = data;

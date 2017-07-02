@@ -20,7 +20,7 @@ describe('ForecastDB', () => {
 
   before(() => {
 
-     const dbConf = JSON.parse(fs.readFileSync('parameters.js', 'utf8'));
+     const dbConf = JSON.parse(fs.readFileSync('parameters.json', 'utf8'));
      const cloudant = Cloudant({account:dbConf.dbUsername, password:dbConf.dbPassword, plugin: 'promises'});
 
 
@@ -38,9 +38,9 @@ describe('ForecastDB', () => {
 
     it('Should add new object', () => {
 
-      return forecastDB.insert('60.192059','24.945831', {x: '1000'}).then( (doc) => {
+      return forecastDB.insert('Helsinki', {x: '1000'}).then( (doc) => {
         expect(doc).not.to.be.null;
-        expect(doc.id).equal('60.192059_24.945831');
+        expect(doc.id).equal('Helsinki');
         expect(doc.updated).not.to.be.null;
         inserted = doc.rev;
       });
@@ -53,16 +53,16 @@ describe('ForecastDB', () => {
   describe('get()', () => {
 
     it('Should return empty', () => {
-        return forecastDB.get('40.730610','_-73.935242').then( (doc) => {
+        return forecastDB.get('Espoo').then( (doc) => {
           expect(doc).to.be.null;
         });
     });
 
 
     it('Should return object', () => {
-        return forecastDB.get('60.192059','24.945831').then( (doc) => {
+        return forecastDB.get('Helsinki').then( (doc) => {
           expect(doc).not.to.be.null;
-          expect(doc._id).equal('60.192059_24.945831');
+          expect(doc._id).equal('Helsinki');
         });
     });
 
@@ -73,7 +73,7 @@ describe('ForecastDB', () => {
   describe('update', () => {
 
     it('Should object data', () => {
-        return forecastDB.update('60.192059_24.945831', inserted, {x: '200'}).then( (doc) => {
+        return forecastDB.update('Helsinki', inserted, {x: '200'}).then( (doc) => {
           expect(doc.ok).equal(true);
           expect(doc.updated).not.to.be.undefined;
           expect(doc.data.x).equal('200')
